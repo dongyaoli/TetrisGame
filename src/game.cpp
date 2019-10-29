@@ -1,19 +1,13 @@
 #include "game.h"
 
-// Game::Game(std::size_t grid_width, std::size_t grid_height)
-//     : snake(grid_width, grid_height),
-//       engine(dev()),
-//       random_w(0, static_cast<int>(grid_width)),
-//       random_h(0, static_cast<int>(grid_height)) {
-//   PlaceFood();
-// }
 
-static const unsigned int s_kFieldWidth = 10;
-static const unsigned int s_kFieldHeight = 20;
+// static const unsigned int s_kFieldWidth = 10;
+// static const unsigned int s_kFieldHeight = 20;
 
-static bool IsOutside(const TetrominoInstance &tetro, int height)
+static bool IsOutside(const Tetromino &tetro, int height)
 {
-    if (tetro.m_pos.y >= height)
+    int pos = tetro.PosY();
+    if (pos >= height)
     {
         return true;
     }
@@ -23,11 +17,10 @@ static bool IsOutside(const TetrominoInstance &tetro, int height)
     }
 }
 
-Game::Game(std::size_t grid_width, std::size_t grid_height,
-           std::size_t screen_width, std::size_t screen_height) 
+Game::Game(std::size_t gridSize, std::size_t screenWidth, std::size_t screenHeight) 
 {
-    _field.width = screen_width;
-    _field.height = screen_height;
+    _fieldWidth = screenWidth / gridSize;
+    _fieldHeight = screenHeight / gridSize;
 };
 
 void Game::Run(Controller const &controller, Renderer &renderer,
@@ -51,7 +44,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
         controller.HandleInput(running, _activeTetro);
         Update();
         // renderer.Render(_field, _activeTetro);
-        renderer.Render(_activeTetro);
+        renderer.Render(_activeTetro, _staticBlocks);
 
         frame_end = SDL_GetTicks();
 
@@ -81,68 +74,68 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 // return true if there was room to spawn
 bool Game::SpawnTetronimo()
 {
-    _activeTetro.tetrominoType = (TetrominoType)(rand() % kNumTetrominoTypes);
-    _activeTetro.rotation = 0;
-    _activeTetro.m_pos.x = (_field.width - 4) / 2; // tetronimo block width approx = 4
-    _activeTetro.m_pos.y = 0;
+    int x = (_fieldWidth - 4) / 2;
+    int y = 0;
+    _activeTetro = Tetromino(rand(), rand(), x, y, _fieldWidth);
     return true;
 }
 
-// void Game::PlaceFood() {
-//   int x, y;
-//   while (true) {
-//     x = random_w(engine);
-//     y = random_h(engine);
-//     // Check that the location is not occupied by a snake item before placing
-//     // food.
-//     if (!snake.SnakeCell(x, y)) {
-//       food.x = x;
-//       food.y = y;
-//       return;
-//     }
-//   }
-// }
-
 void Game::Update()
 {
-    // hard drop
-
-    // TetrominoInstance testInstance = m_activeTetromino;
-    // while (!IsOverlap(testInstance, m_field))
+    _activeTetro.Drop();
+    // if (IsOutside(_activeTetro, _fieldWidth))
     // {
-    //     ++testInstance.m_pos.y;
-    //     ++m_numUserDropsForThisTetronimo;
+    //     SpawnTetronimo();
     // }
-    // --testInstance.m_pos.y; // back up one
-    // --m_numUserDropsForThisTetronimo;
-    // AddTetronimoToField(m_field, testInstance);
-    _activeTetro.m_pos.y += 1;
-    if (IsOutside(_activeTetro, _field.width))
+    if (Overlap())
     {
+        _activeTetro.BackStep();
+        MergeActive();
         SpawnTetronimo();
     }
 }
 
 void Game::Init()
 {
-    _field.width = s_kFieldWidth;
-    _field.height = s_kFieldHeight;
-    // delete [] _field.staticBlocks;
-    // _field.staticBlocks = new int[m_field.width * m_field.height];
-
-    // for( unsigned int iy = 0; iy < _field.height; ++iy )
-    // {
-    // 	for( unsigned int ix = 0; ix < _field.width; ++ix )
-    // 	{
-    // 		_field.staticBlocks[iy * _field.width + ix] = -1;
-    // 	}
-    // }
-
+    _staticBlocks = std::unique_ptr<int[]>{new int[_fieldWidth * _fieldHeight]};
+    for( unsigned int iy = 0; iy < _fieldHeight; ++iy )
+	{
+		for( unsigned int ix = 0; ix < _fieldWidth; ++ix )
+		{
+			_staticBlocks[iy * _fieldWidth + ix] = -1;
+		}
+	}
     srand((unsigned int)time(NULL));
     SpawnTetronimo();
     // m_numLinesCleared = 0;
     // m_framesPerFallStep = s_initialFramesPerFallStep;
     score = 0;
+}
+
+bool Game::Overlap()
+{
+    const Tetromino::int2* blockCoords = _activeTetro.GetBlockCoords();
+    for( int i = 0; i < 4; i++)
+	{
+		const int x = _activeTetro.PosX() + blockCoords[i].x;
+		const int y = _activeTetro.PosY() + blockCoords[i].y;
+
+        if (y >= _fieldHeight) return true;
+		if(_staticBlocks[x + y * _fieldWidth] != -1) return true;
+	}
+
+	return false;
+}
+
+void Game::MergeActive()
+{
+    const Tetromino::int2* blockCoords = _activeTetro.GetBlockCoords();
+	for( unsigned int i = 0; i < 4; i++ )
+	{
+		const int x = _activeTetro.PosX() + blockCoords[i].x;
+		const int y = _activeTetro.PosY() + blockCoords[i].y;
+		_staticBlocks[x + y * _fieldWidth] = _activeTetro.GetTetroType();
+	}
 }
 
 int Game::GetScore() const { return score; }

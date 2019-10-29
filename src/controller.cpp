@@ -11,7 +11,7 @@
 
 // }
 
-void Controller::HandleInput(bool &running, TetrominoInstance &tetro) const
+void Controller::HandleInput(bool &running, Tetromino &tetro) const
 {
     SDL_Event e;
     while (SDL_PollEvent(&e))
@@ -26,14 +26,19 @@ void Controller::HandleInput(bool &running, TetrominoInstance &tetro) const
             {
             case SDLK_UP:
                 break;
-
             case SDLK_DOWN:
                 break;
-
             case SDLK_LEFT:
+                tetro.MoveLeft();
                 break;
-
             case SDLK_RIGHT:
+                tetro.MoveRight();
+                break;
+            case SDLK_m:
+                tetro.TurnLeft();
+                break;
+            case SDLK_n:
+                tetro.TurnRight();
                 break;
             }
         }
