@@ -8,7 +8,7 @@ static SDL_Color MakeSDL_Colour(uint32_t rgba)
   color.r = (unsigned char)((rgba >> 24) & 0xff);
   color.g = (unsigned char)((rgba >> 16) & 0xff);
   color.b = (unsigned char)((rgba >> 8) & 0xff);
-  color.a = (unsigned char)((rgba >> 0) & 0xff); // alpha
+  color.a = (unsigned char)((rgba >> 0) & 0xff);
   return color;
 }
 
@@ -62,7 +62,6 @@ void Renderer::Render(Tetromino activeTetro, std::unique_ptr<int[]> &staticBlock
   SDL_SetRenderDrawColor(sdl_renderer, 0x1E, 0x1E, 0x1E, 0xFF);
   SDL_RenderClear(sdl_renderer);
 
-  //
   for (unsigned int iy = 0; iy < block.h; iy++)
   {
     const unsigned int y = iy * gridSize;
@@ -103,7 +102,13 @@ void Renderer::UpdateWindowTitle(int score, int fps)
   SDL_SetWindowTitle(sdl_window, title.c_str());
 }
 
-void Renderer::DrawRect(int x, int y, int w, int h, uint32_t rgba /*= 0xffffffff */)
+void Renderer::GameoverWindowTitle(int score)
+{
+  std::string title{"Game Over with Score: " + std::to_string(score)};
+  SDL_SetWindowTitle(sdl_window, title.c_str());
+}
+
+void Renderer::DrawRect(int x, int y, int w, int h, uint32_t rgba)
 {
   SDL_Color color = MakeSDL_Colour(rgba);
   SDL_SetRenderDrawColor(sdl_renderer, color.r, color.g, color.b, color.a);
@@ -112,7 +117,7 @@ void Renderer::DrawRect(int x, int y, int w, int h, uint32_t rgba /*= 0xffffffff
   SDL_RenderDrawRect(sdl_renderer, &rect);
 }
 
-void Renderer::DrawSolidRect(int x, int y, int w, int h, uint32_t rgba /*= 0xffffffff */)
+void Renderer::DrawSolidRect(int x, int y, int w, int h, uint32_t rgba)
 {
   SDL_Color color = MakeSDL_Colour(rgba);
   SDL_SetRenderDrawColor(sdl_renderer, color.r, color.g, color.b, color.a);

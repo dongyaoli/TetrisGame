@@ -2,15 +2,6 @@
 #include <iostream>
 #include "SDL.h"
 
-// void Controller::ChangeDirection(Tetromino &tetro) const {
-//   if (snake.direction != opposite || snake.size == 1) snake.direction = input;
-//   return;
-// }
-
-// void Controller::HandleInput(bool &running, TetrominoInstance &tetro) const {
-
-// }
-
 void Controller::HandleInput(bool &running, Tetromino &tetro) const
 {
     SDL_Event e;

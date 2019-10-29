@@ -15,18 +15,16 @@ public:
 	void Run(Controller const &controller, Renderer &renderer,
 			 std::size_t target_frame_duration);
 	int GetScore() const;
-	void Update();
+	bool Update();
 	void Init();
-	// int GetSize() const;
 
 private:
-	// state
-	// Field _field;
 	int _fieldWidth;
 	int _fieldHeight;
 	Tetromino _activeTetro{0, 0, 0, 0, 0};
 	bool Overlap();
 	void MergeActive();
+	int ClearFull();
 	std::unique_ptr<int[]> _staticBlocks;
 
 	std::random_device dev;
@@ -36,13 +34,7 @@ private:
 
 	int score{0};
 	float speed{0.1};
-
-	// void InitPlaying();
-	// void UpdatePlaying(const GameInput &gameInput);
-	// void DrawPlaying(Renderer &renderer);
-
 	bool SpawnTetronimo();
-	// void AddTetronimoToField(const Field &field, const TetrominoInstance &tetronimoInstance);
 };
 
 #endif

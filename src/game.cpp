@@ -1,9 +1,6 @@
 #include "game.h"
 
 
-// static const unsigned int s_kFieldWidth = 10;
-// static const unsigned int s_kFieldHeight = 20;
-
 static bool IsOutside(const Tetromino &tetro, int height)
 {
     int pos = tetro.PosY();
@@ -33,6 +30,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     int frame_count = 0;
     bool running = true;
     Init();
+    bool gameContinue = true;
 
     while (running)
     {
@@ -40,10 +38,8 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 
         // Input, Update, Render - the main game loop.
 
-        // controller.HandleInput(const &_activeTetro);
         controller.HandleInput(running, _activeTetro);
-        Update();
-        // renderer.Render(_field, _activeTetro);
+        gameContinue = Update();
         renderer.Render(_activeTetro, _staticBlocks);
 
         frame_end = SDL_GetTicks();
@@ -68,6 +64,11 @@ void Game::Run(Controller const &controller, Renderer &renderer,
         {
             SDL_Delay(target_frame_duration - frame_duration);
         }
+        if (!gameContinue) break;
+    }
+    if (!gameContinue) {
+        renderer.GameoverWindowTitle(score);
+        SDL_Delay(5000);
     }
 }
 
@@ -77,22 +78,26 @@ bool Game::SpawnTetronimo()
     int x = (_fieldWidth - 4) / 2;
     int y = 0;
     _activeTetro = Tetromino(rand(), rand(), x, y, _fieldWidth);
-    return true;
+    if (Overlap()) return false;
+    else return true;
 }
 
-void Game::Update()
+bool Game::Update()
 {
     _activeTetro.Drop();
-    // if (IsOutside(_activeTetro, _fieldWidth))
-    // {
-    //     SpawnTetronimo();
-    // }
+
     if (Overlap())
     {
         _activeTetro.BackStep();
         MergeActive();
-        SpawnTetronimo();
+        if (!SpawnTetronimo()) {
+            MergeActive();
+            return false;
+        }
+        int s = ClearFull();
+        score += s;
     }
+    return true;
 }
 
 void Game::Init()
@@ -107,8 +112,6 @@ void Game::Init()
 	}
     srand((unsigned int)time(NULL));
     SpawnTetronimo();
-    // m_numLinesCleared = 0;
-    // m_framesPerFallStep = s_initialFramesPerFallStep;
     score = 0;
 }
 
@@ -138,5 +141,34 @@ void Game::MergeActive()
 	}
 }
 
+int Game::ClearFull()
+{
+    int numLinesCleared = 0;
+	for(int y = 0; y < _fieldHeight; y++ )
+	{
+		bool bRowFull = true;
+		for( unsigned int x = 0; x < _fieldWidth; x++ )
+		{
+			if( _staticBlocks[x + y * _fieldWidth] == -1 )
+			{
+				bRowFull = false;
+				break;
+			}
+		}
+
+		if( bRowFull )
+		{
+			++numLinesCleared;
+			for(int yy = y; yy > 0; --yy )
+			{
+				for(int x = 0; x < _fieldWidth; ++x )
+				{
+					_staticBlocks[x + yy * _fieldWidth] = _staticBlocks[x + ( yy - 1 ) * _fieldWidth];
+				}
+			}
+		}
+	}
+    return numLinesCleared;
+}
+
 int Game::GetScore() const { return score; }
-// int Game::GetSize() const { return snake.size; }

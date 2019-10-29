@@ -60,7 +60,7 @@ void Tetromino::TurnRight()
 void Tetromino::MoveLeft()
 {
     _x -= 1;
-    if (_x <= 0) {_x = 1;}
+    if (_x < 0) {_x = 0;}
 }
 
 void Tetromino::MoveRight()
